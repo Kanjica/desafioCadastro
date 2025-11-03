@@ -23,8 +23,8 @@ public class PetService {
             PetType type = typeValidation(questions.get(1));
             PetSex sex = sexValidation(questions.get(2));
             String address = addressValidation(questions.get(3));
-            double age = ageValidation(questions.get(4));
-            double weight = weightValidation(questions.get(5));
+            double age = Double.parseDouble(ageValidation(questions.get(4)));
+            double weight = Double.parseDouble(weightValidation(questions.get(5)));
             String race = raceValidation(questions.get(6));
         } catch (Exception e) {
             System.out.print("Ocorreu um erro: " + e.getStackTrace());
@@ -37,6 +37,7 @@ public class PetService {
         String fullname = sc.nextLine();
 
         if(fullname.matches("/^[a-záàâãéèêíïóôõöúçñ ]+$/i")){
+            if(fullname.isBlank()) fullname = "NÃO INFORMADO";
             return fullname;
         }
         throw new IllegalArgumentException("Nome do animal não deve conter caracteres especiais ou números.");
@@ -74,6 +75,7 @@ public class PetService {
         List<String> address = List.of(sc.nextLine().split(",")).stream().map(String::trim).toList();
 
         boolean ok = true;
+        if(address.isEmpty()) return "NÃO INFORMADO";
 
         if(address.size() == 3){
             for(String part : address){
@@ -89,11 +91,12 @@ public class PetService {
         throw new IllegalArgumentException("Endereço do animal deve conter 3 partes: <numero, cidade, rua>.");
     }
 
-    private static double ageValidation(String question){
+    private static String ageValidation(String question){
         System.out.println(question);
 
         List<String> ageStr = List.of(sc.nextLine().split(" ")).stream().map(String::trim).toList();
 
+        if(ageStr.isEmpty()) return "NÃO INFORMADO";
         if(ageStr.size() == 2 && ageStr.get(0).matches("\\d+(\\.\\d+)?")){
             Double age = Double.parseDouble(ageStr.get(0));
 
@@ -107,15 +110,19 @@ public class PetService {
             if(ageStr.get(1).toLowerCase().equals("meses")){
                 age = age / 12;
             }
-            return age;
+            return ""+age;
         }
         throw new IllegalArgumentException("Idade do animal deve ser um número válido.");
     }
 
-    private static double weightValidation(String question){
+    private static String weightValidation(String question){
         System.out.println(question);
 
         String weightStr = sc.nextLine();
+
+        if(weightStr.isBlank()){
+            return "NÃO INFORMADO";
+        }
 
         if(weightStr.matches("\\d+(\\.\\d+)?")){
             Double weight = Double.parseDouble(weightStr);
@@ -125,7 +132,7 @@ public class PetService {
             else if(weight > 60){
                 throw new IllegalArgumentException("Peso do animal não pode ser maior que 60 kg.");
             }
-            return weight;
+            return "" + weight;
         }
         throw new IllegalArgumentException("Peso do animal deve ser um número válido.");
     }
@@ -136,7 +143,10 @@ public class PetService {
         String race = sc.nextLine();
 
         if(race.matches("/^[a-záàâãéèêíïóôõöúçñ ]+$/i")){
+            if(race.isBlank()) race = "NÃO INFORMADO";
+  
             return race;
+            
         }
         throw new IllegalArgumentException("Raça do animal não deve conter caracteres especiais ou números.");
     }
