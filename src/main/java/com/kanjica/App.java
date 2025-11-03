@@ -24,7 +24,7 @@ public class App {
         while (true) {
             int option = Menu.showMenu();
             switch (option) {
-                // case 1 -> petService.createPet(questions);
+                case 1 -> petService.createPet(questions);
                 // case 2 -> petService.updatePet(null);
                 // case 3 -> petService.deletePet(null);
                 // case 4 -> petService.listPets();
