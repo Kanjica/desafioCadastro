@@ -1,6 +1,7 @@
 {
     "java.configuration.updateBuildConfiguration": "automatic",
     "conventionalCommits.scopes": [
-        "Passo1"
+        "Passo1",
+        "Passo2"
     ]
 }
