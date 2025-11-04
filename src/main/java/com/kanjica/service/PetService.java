@@ -1,11 +1,17 @@
 package com.kanjica.service;
 
 import java.io.File;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
+import com.fasterxml.jackson.core.exc.StreamReadException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kanjica.model.Pet;
 import com.kanjica.model.PetSex;
@@ -13,8 +19,9 @@ import com.kanjica.model.PetType;
 import com.kanjica.util.Menu;
 
 public class PetService {
-    private String basePath = "registeredPets";
-    private ObjectMapper mapper;
+    private static String basePath = "registeredPets";
+    private static String archive = "/pet.json";
+    private static ObjectMapper mapper;
     private static Scanner sc = Menu.getScanner();
 
     public PetService(ObjectMapper mapper){
@@ -43,7 +50,7 @@ public class PetService {
 
             Pet pet = new Pet(fullname, type, sex, address, age, weight, race);
             
-            String petJson = mapper.writeValueAsString(pet);
+            File file = new File(basePath+archive);
 
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmm");
             String timestamp = LocalDateTime.now().format(formatter);
@@ -54,14 +61,12 @@ public class PetService {
             String filePath = basePath + File.separator + fileKey + ".json";
 
 
-            mapper.writeValue(new File(filePath), pet);
+            mapper.writeValue(file, Map.of(fileKey, pet));
             
             System.out.println("\nPet registrado com sucesso!");
             System.out.println("Arquivo JSON salvo em: " + filePath);
             System.out.println("\nPet successfully converted to JSON:");
-            System.out.println(petJson);
 
-            mapper.writeValue(new File(basePath + "/pet.json"), pet);
 
         } catch (Exception e) {
             System.out.print("Ocorreu um erro: ");
@@ -148,7 +153,7 @@ public class PetService {
         List<String> ageStr = List.of(sc.nextLine().split(" ")).stream().map(String::trim).toList();
 
         if(ageStr.isEmpty()) return "NÃO INFORMADO";
-        if(ageStr.size() == 2 && ageStr.get(0).matches("\\d+(\\.\\d+)?")){
+        if(ageStr.size() == 2 && ageStr.get(0).matches("\d+(\.\d+)?")){
             Double age = Double.parseDouble(ageStr.get(0));
 
             if(age <= 0){
@@ -175,7 +180,7 @@ public class PetService {
             return "NÃO INFORMADO";
         }
 
-        if(weightStr.matches("\\d+(\\.\\d+)?")){
+        if(weightStr.matches("\d+(\.\d+)?")){
             Double weight = Double.parseDouble(weightStr);
             if(weight <= 0.5){
                 throw new IllegalArgumentException("Peso do animal não pode ser praticamente negativo.");
@@ -200,5 +205,11 @@ public class PetService {
 
         }
         throw new IllegalArgumentException("Raça do animal não deve conter caracteres especiais ou números.");
+    }
+
+    private static void addPetToFile(Pet pet) throws StreamReadException, DatabindException, IOException{
+        TypeReference<Map<String, Pet>> registeredPetsType = new TypeReference<>(){};
+
+        Map<String, Pet> registeredPets = mapper.readValue(new File(basePath + archive), registeredPetsType);
     }
 }
