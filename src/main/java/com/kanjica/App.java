@@ -5,12 +5,13 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.kanjica.service.PetService;
 import com.kanjica.util.Menu;
 
 public class App {
     public static void main(String[] args) throws Exception {
-        ObjectMapper mapper = new ObjectMapper();
+        ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
         InputStream is = App.class.getClassLoader().getResourceAsStream("form.json");
 
         if (is == null) {

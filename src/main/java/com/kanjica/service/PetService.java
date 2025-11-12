@@ -25,7 +25,7 @@ public class PetService {
     private static Scanner sc = Menu.getScanner();
 
     public PetService(ObjectMapper mapper){
-        this.mapper = mapper;
+        PetService.mapper = mapper;
         
         File directory = new File(basePath);
         if (!directory.exists()) {
@@ -60,9 +60,14 @@ public class PetService {
             String fileKey = timestamp + "-" + formattedName;
             String filePath = basePath + File.separator + fileKey + ".json";
 
+            TypeReference<Map<String, Pet>> typeRef = new TypeReference<Map<String, Pet>>() {};
 
-            mapper.writeValue(file, Map.of(fileKey, pet));
-            
+            Map<String, Pet> listaPets = mapper.readValue(file, typeRef);
+
+            listaPets.put(fileKey, pet);
+
+            mapper.writeValue(file, listaPets);
+
             System.out.println("\nPet registrado com sucesso!");
             System.out.println("Arquivo JSON salvo em: " + filePath);
             System.out.println("\nPet successfully converted to JSON:");
@@ -153,7 +158,7 @@ public class PetService {
         List<String> ageStr = List.of(sc.nextLine().split(" ")).stream().map(String::trim).toList();
 
         if(ageStr.isEmpty()) return "NÃO INFORMADO";
-        if(ageStr.size() == 2 && ageStr.get(0).matches("\d+(\.\d+)?")){
+        if(ageStr.size() == 2 && ageStr.get(0).matches("\\d+(\\.\\d+)?")){
             Double age = Double.parseDouble(ageStr.get(0));
 
             if(age <= 0){
@@ -180,7 +185,7 @@ public class PetService {
             return "NÃO INFORMADO";
         }
 
-        if(weightStr.matches("\d+(\.\d+)?")){
+        if(weightStr.matches("\\d+(\\.\\d+)?")){
             Double weight = Double.parseDouble(weightStr);
             if(weight <= 0.5){
                 throw new IllegalArgumentException("Peso do animal não pode ser praticamente negativo.");
