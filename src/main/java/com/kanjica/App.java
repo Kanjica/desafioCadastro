@@ -29,7 +29,10 @@ public class App {
                 // case 2 -> petService.updatePet(null);
                 // case 3 -> petService.deletePet(null);
                 // case 4 -> petService.listPets();
-                // case 5 -> petService.searchPets();
+                case 5 -> {
+                    String searchCriteria = Menu.getSearchCriteria();
+                    petService.searchPet(searchCriteria);
+                }
                 case 6 -> {
                     System.out.println("Saindo...");
                     return;

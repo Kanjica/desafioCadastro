@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,10 +24,15 @@ public class PetService {
     private static String archive = "/pet.json";
     private static ObjectMapper mapper;
     private static Scanner sc = Menu.getScanner();
+    private static Map<String, Pet> listaPet;
+    private static File file;
 
-    public PetService(ObjectMapper mapper){
+    public PetService(ObjectMapper mapper) throws StreamReadException, DatabindException, IOException{
         PetService.mapper = mapper;
+        file = new File(basePath + archive);
+        listaPet = readPetsFromFile();
         
+
         File directory = new File(basePath);
         if (!directory.exists()) {
             boolean created = directory.mkdirs();
@@ -50,28 +56,7 @@ public class PetService {
 
             Pet pet = new Pet(fullname, type, sex, address, age, weight, race);
             
-            File file = new File(basePath+archive);
-
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmm");
-            String timestamp = LocalDateTime.now().format(formatter);
-            
-            String formattedName = fullname.toUpperCase().replace(" ", "_");
-            
-            String fileKey = timestamp + "-" + formattedName;
-            String filePath = basePath + File.separator + fileKey + ".json";
-
-            TypeReference<Map<String, Pet>> typeRef = new TypeReference<Map<String, Pet>>() {};
-
-            Map<String, Pet> listaPets = mapper.readValue(file, typeRef);
-
-            listaPets.put(fileKey, pet);
-
-            mapper.writeValue(file, listaPets);
-
-            System.out.println("\nPet registrado com sucesso!");
-            System.out.println("Arquivo JSON salvo em: " + filePath);
-            System.out.println("\nPet successfully converted to JSON:");
-
+            addPetToFile(pet);
 
         } catch (Exception e) {
             System.out.print("Ocorreu um erro: ");
@@ -213,8 +198,91 @@ public class PetService {
     }
 
     private static void addPetToFile(Pet pet) throws StreamReadException, DatabindException, IOException{
-        TypeReference<Map<String, Pet>> registeredPetsType = new TypeReference<>(){};
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmm");
+        String timestamp = LocalDateTime.now().format(formatter);
 
-        Map<String, Pet> registeredPets = mapper.readValue(new File(basePath + archive), registeredPetsType);
+        String formattedName = pet.getName().toUpperCase().replace(" ", "_");
+
+        String fileKey = timestamp + "-" + formattedName;
+        String filePath = basePath + File.separator + fileKey + ".json";
+        TypeReference<Map<String, Pet>> typeRef = new TypeReference<Map<String, Pet>>() {};
+
+        Map<String, Pet> listaPet = mapper.readValue(file, typeRef);
+
+        listaPet.put(fileKey, pet);
+
+        mapper.writeValue(file, listaPet);
+
+        System.out.println("\nPet registrado com sucesso!");
+        System.out.println("Arquivo JSON salvo em: " + filePath);
+        System.out.println("\nPet successfully converted to JSON:");
     }
+
+    private static Map<String, Pet> readPetsFromFile() throws StreamReadException, DatabindException, IOException{
+        TypeReference<Map<String, Pet>> typeRef = new TypeReference<Map<String, Pet>>() {};
+        Map<String, Pet> listaPet = mapper.readValue(file, typeRef);
+        return listaPet;
+    }
+
+    public void searchPet(String searchCriteria) {
+        List<String> criteriaList = List.of(searchCriteria.split(";")).stream().map(String::trim).toList();
+        
+        System.out.println(criteriaList);
+
+        List<Pet> matchedPets = new ArrayList<>();
+
+        for(Pet pet: listaPet.values()){
+            for(String criterion: criteriaList){
+                String[] parts = criterion.split(":", 2);
+                
+
+                for (int index = 0; index < parts.length; index++) {
+                    System.out.println("Part " + index + ": " + parts[index]);
+                }
+
+                if(parts.length != 2) continue;
+
+                String key = parts[0].trim().toLowerCase();
+                String value = parts[1].trim().toLowerCase();
+
+                boolean matches = switch (key) {
+                    case "nome" -> pet.getName().toLowerCase().contains(value);
+                    case "tipo" -> pet.getType().toString().toLowerCase().equals(value);
+                    case "sexo" -> pet.getSex().toString().toLowerCase().equals(value);
+                    case "endereço" -> pet.getAddress().toLowerCase().contains(value);
+                    case "idade" -> {
+                        try {
+                            double ageValue = Double.parseDouble(value);
+                            yield pet.getAge() == ageValue;
+                        } catch (NumberFormatException e) {
+                            yield false;
+                        }
+                    }
+                    case "peso" -> {
+                        try {
+                            double weightValue = Double.parseDouble(value);
+                            yield pet.getWeight() == weightValue;
+                        } catch (NumberFormatException e) {
+                            yield false;
+                        }
+                    }
+                    case "raça" -> pet.getRace().toLowerCase().contains(value);
+                    default -> false;
+                };
+
+                if(matches){
+                    matchedPets.add(pet);
+                    break;
+                }
+            }
+        }
+
+        int selectedIndex = Menu.showMatchPets(matchedPets);
+        if(selectedIndex != -1){
+            Pet selectedPet = matchedPets.get(selectedIndex);
+            System.out.println("\nDetalhes do pet selecionado:");
+            System.out.println(selectedPet);
+        }
+    }
+
 }
